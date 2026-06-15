@@ -1,8 +1,10 @@
 import type { LibraryTitle } from '../mediaIntelligence/types';
 import type { MediaItem } from '../../../shared/types';
+import { findLibraryTitleByMediaId } from '../mediaIntelligence/libraryTitleService';
 import { buildDiscoverSections } from './recommendationService';
 import { resolveLocalAvailability } from './catalogService';
 import { filterCatalogResults } from './contentPolicyService';
+import { buildUserAffinityProfile } from './userAffinityService';
 import {
   DISCOVER_GENRES,
   fetchDiscoverSectionPage,
@@ -37,6 +39,16 @@ export interface DiscoverFeedContext {
   watchlistCatalogIds: string[];
   includeAdultContent: boolean;
   affinity: UserAffinityProfile;
+}
+
+export interface CompactForYouInput {
+  libraryTitles: LibraryTitle[];
+  mediaItems: MediaItem[];
+  favoriteIds: Set<string>;
+  watchlistCatalogIds: string[];
+  includeAdultContent?: boolean;
+  currentMediaId?: string;
+  limit?: number;
 }
 
 const BATCH_SIZE = 2;
@@ -199,7 +211,29 @@ function rescoreRecommendationItem(item: RecommendationItem, affinity: UserAffin
   return { ...item, score: Math.max(item.score, score) };
 }
 
-export function getCompactForYouItems(context: DiscoverFeedContext, limit = 6): RecommendationItem[] {
+function toDiscoverFeedContext(input: CompactForYouInput): DiscoverFeedContext {
+  return {
+    libraryTitles: input.libraryTitles,
+    mediaItems: input.mediaItems,
+    favoriteIds: input.favoriteIds,
+    watchlistCatalogIds: input.watchlistCatalogIds,
+    includeAdultContent: input.includeAdultContent ?? false,
+    affinity: buildUserAffinityProfile({
+      libraryTitles: input.libraryTitles,
+      mediaItems: input.mediaItems,
+      favoriteIds: input.favoriteIds,
+      watchlistCatalogIds: input.watchlistCatalogIds,
+    }),
+  };
+}
+
+export function getCompactForYouItems(input: CompactForYouInput): RecommendationItem[] {
+  const limit = input.limit ?? 6;
+  const context = toDiscoverFeedContext(input);
+  const currentTitleId = input.currentMediaId
+    ? findLibraryTitleByMediaId(input.libraryTitles, input.currentMediaId)?.id
+    : undefined;
+
   const sections = buildDiscoverSections({
     libraryTitles: context.libraryTitles,
     mediaItems: context.mediaItems,
@@ -209,18 +243,23 @@ export function getCompactForYouItems(context: DiscoverFeedContext, limit = 6): 
   const result: RecommendationItem[] = [];
   const seen = new Set<string>();
 
+  const isExcluded = (item: RecommendationItem) =>
+    Boolean(currentTitleId && item.localTitleId === currentTitleId);
+
   const continueSection = sections.find((section) => section.id === 'continue');
   if (continueSection?.items[0]) {
     const hero = continueSection.items[0];
-    result.push(hero);
-    seen.add(itemKey(hero));
+    if (!isExcluded(hero)) {
+      result.push(hero);
+      seen.add(itemKey(hero));
+    }
   }
 
   const candidates: RecommendationItem[] = [];
   for (const section of sections) {
     for (const item of section.items) {
       const key = itemKey(item);
-      if (seen.has(key)) continue;
+      if (seen.has(key) || isExcluded(item)) continue;
       candidates.push(rescoreRecommendationItem(item, context.affinity));
     }
   }
