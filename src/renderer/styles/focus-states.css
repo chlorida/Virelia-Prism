@@ -1,0 +1,94 @@
+/* Phase 4.9: mouse clicks should not leave decorative focus rings; keyboard keeps :focus-visible. */
+
+:root {
+  --focus-ring-color: rgba(165, 108, 255, 0.72);
+  --focus-ring-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+.ghost-button:focus:not(:focus-visible),
+.nav-item:focus:not(:focus-visible),
+.playlist-chip:focus:not(:focus-visible),
+.queue-item:focus:not(:focus-visible),
+.side-tab:focus:not(:focus-visible),
+.icon-button:focus:not(:focus-visible),
+.transport-toggle:focus:not(:focus-visible),
+.transport button:focus:not(:focus-visible),
+.title-bar-btn:focus:not(:focus-visible),
+.mini-window-chrome__btn:focus:not(:focus-visible),
+.mini-window-chrome__icon:focus:not(:focus-visible),
+.context-menu button:focus:not(:focus-visible),
+.media-row .media-title:focus:not(:focus-visible),
+.media-row .icon-button:focus:not(:focus-visible),
+.video-stage__surface:focus:not(:focus-visible),
+.video-shell:focus:not(:focus-visible),
+.vc-icon-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button:focus-visible,
+.ghost-button:focus-visible,
+.nav-item:focus-visible,
+.playlist-chip:focus-visible,
+.queue-item:focus-visible,
+.side-tab:focus-visible,
+.vc-icon-btn:focus-visible,
+.video-stage__surface:focus-visible,
+.icon-button:focus-visible,
+.transport-toggle:focus-visible,
+.transport button:focus-visible,
+.title-bar-btn:focus-visible,
+.mini-window-chrome__btn:focus-visible,
+.mini-window-chrome__icon:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  box-shadow: none;
+  border-color: var(--line);
+}
+
+input:focus-visible,
+select:focus-visible {
+  border-color: rgba(165, 108, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(165, 108, 255, 0.16);
+  outline: none;
+}
+
+/* List row: keyboard-only focus ring (not mouse selection). */
+.media-row.focused {
+  outline: none;
+}
+
+html[data-keyboard-nav] .media-row.focused {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+
+.media-row:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+
+/* Selected vs playing: distinct tokens (playing wins when both). */
+.media-row.active:not(.playing) {
+  color: var(--text);
+  border-color: rgba(165, 108, 255, 0.28);
+  background: rgba(165, 108, 255, 0.05);
+  box-shadow: none;
+}
+
+.media-row.playing {
+  border-color: rgba(128, 232, 255, 0.5);
+  background: rgba(128, 232, 255, 0.06);
+  box-shadow: inset 3px 0 0 rgba(128, 232, 255, 0.9);
+}
+
+.media-row.playing .media-title::before {
+  content: '▶';
+  margin-right: 6px;
+  font-size: 10px;
+  color: rgba(128, 232, 255, 0.95);
+}

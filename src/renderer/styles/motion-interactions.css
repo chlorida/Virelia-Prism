@@ -1,0 +1,138 @@
+/* Prism motion — micro-interactions and list utilities */
+
+/* Interactive targets: transition transform/opacity/shadow only (no layout shift) */
+.prism-motion-interactive,
+.ghost-button,
+.pill-button,
+.primary-action:not(.primary-action--shimmer),
+.nav-item,
+.playlist-chip,
+.shell-segment,
+.title-media-grid__chip,
+.icon-button,
+.vc-icon-btn,
+.glass-dropdown__trigger,
+.queue-item,
+.up-next-card,
+.smart-tab-pill,
+.catalog-title-tab,
+.settings-tab,
+.search-palette__tab,
+.side-tab,
+.layout-toggle,
+.content-mode-rail__option,
+.title-bar-btn {
+  transition:
+    transform var(--motion-duration-micro, 120ms) var(--motion-ease-out),
+    opacity var(--motion-duration-micro, 120ms) var(--motion-ease-out),
+    box-shadow var(--motion-duration-fast, 180ms) var(--motion-ease-out),
+    border-color var(--motion-duration-fast, 180ms) var(--motion-ease-out),
+    background var(--motion-duration-fast, 180ms) var(--motion-ease-out),
+    color var(--motion-duration-fast, 180ms) var(--motion-ease-out);
+}
+
+.prism-motion-lift:hover:not(:disabled),
+.ghost-button:hover:not(:disabled),
+.pill-button:hover:not(:disabled),
+.playlist-chip:hover,
+.shell-segment:hover:not(.is-active):not([aria-pressed='true']),
+.title-media-grid__chip:hover:not(.is-active),
+.icon-button:hover:not(:disabled),
+.layout-toggle:hover:not(:disabled),
+.queue-item:hover,
+.up-next-card:hover,
+.smart-tab-pill:hover:not(.is-active),
+.content-mode-rail__option:hover {
+  transform: var(--motion-lift-hover, translateY(-2px));
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+.prism-motion-interactive:active:not(:disabled),
+.ghost-button:active:not(:disabled),
+.pill-button:active:not(:disabled),
+.nav-item:active,
+.shell-segment:active,
+.title-media-grid__chip:active,
+.icon-button:active:not(:disabled),
+.layout-toggle:active,
+.content-mode-rail__option:active,
+.title-bar-btn:active {
+  transform: var(--motion-scale-press, scale(0.97));
+}
+
+.prism-motion-glow:hover:not(:disabled),
+.ghost-button.layout-toggle.is-active,
+.shell-segment.is-active,
+.shell-segment[aria-pressed='true'],
+.title-media-grid__chip.is-active {
+  box-shadow: 0 0 0 1px rgba(165, 108, 255, 0.22), 0 8px 24px rgba(80, 40, 140, 0.18);
+}
+
+/* List item presence */
+.prism-motion-list-host {
+  display: contents;
+}
+
+.prism-motion-list-enter {
+  animation: prism-list-enter var(--motion-duration-fast, 180ms) var(--motion-ease-out) both;
+}
+
+.prism-motion-list-exit {
+  animation: prism-list-exit var(--motion-duration-fast, 180ms) var(--motion-ease-in) both;
+}
+
+/* Content mode workspace crossfade */
+html.prism-content-music .media-workspace--library-mode,
+html.prism-content-video .media-workspace--library-mode {
+  animation: prism-tab-content-enter var(--motion-duration-base, 280ms) var(--motion-ease-out) both;
+}
+
+/* Empty states */
+.prism-empty-rise,
+.prism-motion-empty-enter {
+  animation: prism-empty-rise var(--motion-duration-base, 280ms) var(--motion-ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prism-motion-interactive,
+  .ghost-button,
+  .pill-button,
+  .primary-action:not(.primary-action--shimmer),
+  .nav-item,
+  .playlist-chip,
+  .shell-segment,
+  .title-media-grid__chip,
+  .icon-button,
+  .vc-icon-btn,
+  .glass-dropdown__trigger,
+  .queue-item,
+  .up-next-card,
+  .smart-tab-pill,
+  .catalog-title-tab,
+  .settings-tab,
+  .search-palette__tab,
+  .side-tab,
+  .layout-toggle,
+  .content-mode-rail__option,
+  .title-bar-btn {
+    transition: none;
+  }
+
+  .prism-motion-list-enter,
+  .prism-motion-list-exit,
+  .prism-motion-empty-enter,
+  html.prism-content-music .media-workspace--library-mode,
+  html.prism-content-video .media-workspace--library-mode {
+    animation: none;
+  }
+
+  .prism-motion-lift:hover:not(:disabled),
+  .ghost-button:hover:not(:disabled),
+  .nav-item:hover,
+  .queue-item:hover {
+    transform: none;
+  }
+}

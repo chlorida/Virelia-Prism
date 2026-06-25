@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop, "feature/**"]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust tests
+        run: npm run test:rust
+

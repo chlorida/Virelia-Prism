@@ -1,0 +1,102 @@
+/**
+ * Titles shelf scroll ownership
+ * --------------------------------
+ * SCROLL OWNER: .media-workspace__list--titles-browse (center column)
+ * Collection grid/cards flow normally inside — no nested overflow:auto panel.
+ */
+
+.app-content > .media-list-host {
+  height: 100%;
+}
+
+.media-list-host > .media-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.media-workspace--library-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.media-workspace--titles-browse {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Single center scroll region for all library surfaces */
+.media-workspace__list--library-scroll,
+.media-workspace__list--titles-browse,
+.media-workspace__list--title-detail {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(165, 108, 255, 0.35) transparent;
+  scroll-padding-top: 8px;
+  padding-top: 8px;
+  padding-inline: 16px;
+  padding-bottom: calc(var(--bottom-player-height, var(--player-height, var(--playback-bar-height))) + var(--panel-gap, 12px) + 40px);
+}
+
+/* Collection flows inside scroll owner — must not create a second scroll box */
+.title-media-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.title-media-grid__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 210px));
+  gap: 16px;
+  justify-content: start;
+  align-content: start;
+  width: 100%;
+}
+
+.title-media-grid__cards--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title-media-grid__cards--virtual-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 210px));
+  gap: 16px;
+  justify-content: start;
+  align-content: start;
+  width: 100%;
+}
+
+.title-media-grid__virtual-spacer {
+  width: 100%;
+}
+
+.title-media-grid__viewport {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Dev: outline scroll owner when auditing (localStorage prismDevScrollAudit=1) */
+body.prism-debug-scroll-audit .media-workspace__list--titles-browse,
+body.prism-debug-scroll-audit .media-workspace__list--title-detail {
+  outline: 2px dashed rgba(128, 232, 255, 0.65);
+  outline-offset: -2px;
+}

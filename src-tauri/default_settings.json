@@ -1,0 +1,103 @@
+{
+  "settingsSchemaVersion": 3,
+  "theme": "virelia-dark",
+  "uiLanguage": "auto",
+  "startWithWindows": false,
+  "minimizeToTray": true,
+  "continueInBackground": true,
+  "libraryFolders": [],
+  "playback": {
+    "volume": 0.74,
+    "speed": 1,
+    "muted": false,
+    "repeat": "off",
+    "shuffle": false,
+    "preferredEngine": "html5-fallback"
+  },
+  "subtitles": {
+    "defaultLanguage": "auto",
+    "preferredLanguage": "auto",
+    "timingOffsetMs": 0,
+    "autoLoad": true,
+    "autoGenerate": true,
+    "progressiveSubtitleGeneration": true,
+    "usePartialGeneratedSubtitles": true,
+    "subtitleTimelineCoverage": true,
+    "generatedFormat": "vtt",
+    "saveLocation": "cache",
+    "whisperModel": "base",
+    "whisperGpu": "auto",
+    "whisperGpuLayers": 99,
+    "translation": {
+      "backend": "disabled"
+    },
+    "speakerColors": "auto",
+    "nameStyle": "localized",
+    "showSoundLabels": false
+  },
+  "metadata": {
+    "preferredLanguage": "auto",
+    "enableOnlineLookup": true,
+    "metadataRefreshOnTitleOpen": true,
+    "metadataCardsSimpleMode": true
+  },
+  "discovery": {
+    "region": "auto",
+    "preferredServices": [],
+    "enableReviews": true,
+    "enableRecommendations": true,
+    "autoMatchConfidenceThreshold": 0.72,
+    "askBeforeOpeningBrowser": true,
+    "searchEngine": "default",
+    "customSearchTemplate": "https://www.google.com/search?q={query}",
+    "disableOnlineDiscovery": false,
+    "enableOnlineCatalog": true,
+    "primaryCatalogProvider": "auto",
+    "tmdbApiKey": "",
+    "gatewayBaseUrl": "",
+    "enableCatalogSearch": true,
+    "enableDiscoverCatalogRails": true,
+    "includeAdultContent": false
+  },
+  "onboarding": {
+    "welcomeCompleted": false
+  },
+  "characterRecognition": {
+    "mode": "disabled",
+    "backendUrl": ""
+  },
+  "visualizer": {
+    "enabled": true,
+    "style": "prism-wave"
+  },
+  "shortcuts": {
+    "playPause": "Space",
+    "globalSearch": "Ctrl+P",
+    "previous": "ArrowLeft",
+    "next": "ArrowRight",
+    "addToQueue": "Q",
+    "favorite": "F",
+    "miniPlayer": "Ctrl+Shift+M",
+    "settings": "Ctrl+,"
+  },
+  "monetization": {
+    "tier": "free",
+    "premiumThemes": false,
+    "advancedSmartPlaylists": false,
+    "additionalVisualizers": false,
+    "exclusiveCustomization": false,
+    "boostyIntegrationPlaceholder": true
+  },
+  "uiSounds": {
+    "enabled": false,
+    "volume": 0.12,
+    "duringPlayback": "important_only",
+    "categories": {
+      "playback": true,
+      "navigation": true,
+      "queue": true,
+      "notifications": true,
+      "warnings": true
+    }
+  }
+}

@@ -1,0 +1,85 @@
+.startup-shell {
+  position: fixed;
+  inset: 52px 0 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(7, 7, 17, 0.72);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+.startup-shell__card {
+  text-align: center;
+  padding: 28px 36px;
+  border-radius: 20px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+
+.startup-shell__title {
+  margin: 8px 0 18px;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.startup-shell__spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--violet);
+  animation: startup-spin 0.85s linear infinite;
+}
+
+.app-content--booting {
+  visibility: hidden;
+}
+
+.fatal-error-screen {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.fatal-error-screen__card {
+  width: min(640px, 100%);
+  padding: 28px;
+  border-radius: 20px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.fatal-error-screen__lead {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.fatal-error-screen__details,
+.fatal-error-screen__stack pre {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.fatal-error-screen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@keyframes startup-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

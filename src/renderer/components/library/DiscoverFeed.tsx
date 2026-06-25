@@ -259,7 +259,7 @@ export const DiscoverFeed = memo(function DiscoverFeed(props: {
 
   if (sections.length === 0 && initialLoaded && !loading) {
     return (
-      <div className="discover-page__empty glass-inset">
+      <div className="discover-page__empty glass-inset prism-empty-rise">
         <p>{t('discover.starter.title')}</p>
         <p className="muted">{t('discover.starter.detail')}</p>
       </div>

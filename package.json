@@ -1,0 +1,51 @@
+{
+  "name": "virelia-prism",
+  "version": "0.1.0",
+  "description": "Premium Windows desktop multimedia player by Virelia.",
+  "author": "Virelia",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "dist/main/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"tsc -p tsconfig.main.json --watch --preserveWatchOutput\" \"wait-on tcp:5173 dist/main/main.js && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "build": "npm run typecheck && node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && tsc -p tsconfig.main.json",
+    "build:renderer": "tsc -p tsconfig.json --noEmit && vite build",
+    "start": "electron .",
+    "tauri:dev": "tauri dev",
+    "tauri:run": "node scripts/run-release.mjs",
+    "tauri:build": "tauri build && node scripts/run-release.mjs",
+    "tauri:build:fast": "tauri build -- --profile release-fast && node scripts/run-release.mjs",
+    "tauri:build:only": "tauri build",
+    "tauri:build:perf": "cross-env VITE_VIRELIA_PERF=1 npm run tauri:build",
+    "measure:startup": "vitest run src/renderer/lib/startupBenchmark.test.ts src/renderer/features/library/libraryWarmStartup.test.ts",
+    "test": "vitest run",
+    "test:integration": "vitest run src/**/*.integration.test.ts",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "release:check": "npm run typecheck && npm test && npm run test:rust",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.main.json --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/montserrat": "^5.2.8",
+    "@fontsource/syncopate": "^5.2.8",
+    "@tanstack/react-virtual": "^3.13.26",
+    "@tauri-apps/api": "2.11.0",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@vitejs/plugin-react": "6.0.2",
+    "electron": "42.3.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "typescript": "6.0.3",
+    "vite": "8.0.14"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.2",
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
+    "concurrently": "9.2.1",
+    "cross-env": "10.1.0",
+    "jsdom": "^29.1.1",
+    "vitest": "4.1.7",
+    "wait-on": "9.0.10"
+  }
+}

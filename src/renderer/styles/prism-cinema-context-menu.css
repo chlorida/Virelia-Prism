@@ -1,0 +1,216 @@
+.prism-cinema-menu {
+  position: fixed;
+  z-index: 10060;
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(165, 108, 255, 0.42);
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(128, 232, 255, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(24, 18, 42, 0.98) 0%, rgba(8, 6, 16, 0.98) 100%);
+  box-shadow:
+    0 0 0 1px rgba(128, 232, 255, 0.08),
+    0 22px 56px rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(22px);
+  pointer-events: auto;
+  transform-origin: top left;
+}
+
+.prism-cinema-menu.is-open {
+  animation: prism-cinema-menu-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.prism-cinema-menu.is-closing {
+  animation: prism-cinema-menu-out 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes prism-cinema-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes prism-cinema-menu-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    filter: blur(4px);
+  }
+}
+
+.prism-cinema-menu__header {
+  display: grid;
+  gap: 2px;
+  padding: 2px 6px 4px;
+}
+
+.prism-cinema-menu__eyebrow {
+  color: rgba(128, 232, 255, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.prism-cinema-menu__title {
+  color: #f6f0ff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prism-cinema-menu__section {
+  display: grid;
+  gap: 4px;
+}
+
+.prism-cinema-menu__section-title {
+  padding: 2px 6px 4px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.prism-cinema-menu__list {
+  display: grid;
+  gap: 4px;
+}
+
+.prism-cinema-menu__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.prism-cinema-menu__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #efe8ff;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    color 0.2s ease,
+    background 0.22s ease,
+    transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
+    box-shadow 0.22s ease;
+}
+
+.prism-cinema-menu__grid .prism-cinema-menu__item {
+  justify-content: center;
+  text-align: center;
+  padding: 10px 8px;
+  min-height: 42px;
+}
+
+.prism-cinema-menu__item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 120%, rgba(128, 232, 255, 0.28), transparent 72%);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+.prism-cinema-menu.is-open .prism-cinema-menu__item {
+  animation: prism-cinema-menu-item-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.prism-cinema-menu.is-open .prism-cinema-menu__item:nth-child(1) { animation-delay: 0.03s; }
+.prism-cinema-menu.is-open .prism-cinema-menu__item:nth-child(2) { animation-delay: 0.06s; }
+.prism-cinema-menu.is-open .prism-cinema-menu__item:nth-child(3) { animation-delay: 0.09s; }
+.prism-cinema-menu.is-open .prism-cinema-menu__item:nth-child(4) { animation-delay: 0.12s; }
+.prism-cinema-menu.is-open .prism-cinema-menu__item:nth-child(5) { animation-delay: 0.15s; }
+.prism-cinema-menu.is-open .prism-cinema-menu__item:nth-child(6) { animation-delay: 0.18s; }
+
+@keyframes prism-cinema-menu-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.prism-cinema-menu__item:hover:not(:disabled),
+.prism-cinema-menu__item:focus-visible {
+  background: rgba(165, 108, 255, 0.2);
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.prism-cinema-menu__item:hover:not(:disabled)::before,
+.prism-cinema-menu__item:focus-visible::before {
+  opacity: 1;
+}
+
+.prism-cinema-menu__item.is-active {
+  color: var(--cyan);
+  background: rgba(128, 232, 255, 0.12);
+}
+
+.prism-cinema-menu__item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.prism-cinema-menu__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: rgba(128, 232, 255, 0.9);
+}
+
+.prism-cinema-menu__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.prism-cinema-menu__label {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prism-cinema-menu__grid .prism-cinema-menu__label {
+  white-space: normal;
+  line-height: 1.2;
+}

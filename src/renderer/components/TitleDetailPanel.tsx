@@ -23,6 +23,12 @@ import { getBestTitleArtwork, pickTitleCoverItem, shouldRequestLocalThumbnail } 
 import { useMediaThumbnail } from './watch/useMediaThumbnail';
 import { MediaThumb } from './watch/MediaThumb';
 import { buildFranchiseTitleContext } from '../lib/mediaIntelligence/franchise/franchiseService';
+import {
+  isAlbumLibraryTitle,
+  resolveAlbumTrackLabel,
+  sortAlbumTracks,
+  parseAudioTrackName,
+} from '../lib/mediaIntelligence/audioAlbumService';
 import { resolveFranchiseForLibraryTitle } from '../lib/mediaIntelligence/franchise/franchiseMatcher';
 import { getFranchiseCatalogEntry } from '../lib/mediaIntelligence/franchise/franchiseCatalog';
 import {
@@ -220,6 +226,82 @@ function EpisodeRow(props: {
   );
 }
 
+function AlbumTrackRow(props: {
+  item: MediaItem;
+  index: number;
+  durationById: Record<string, number>;
+  playingId?: string;
+  t: ReturnType<typeof useI18n>['t'];
+  onPlay: (item: MediaItem) => void;
+  onFocus: (itemId: string) => void;
+}) {
+  const { item, durationById, t } = props;
+  const duration = durationById[item.id] ?? item.durationSeconds;
+  const resumeSeconds = item.resumePositionSeconds ?? 0;
+  const hasResume = resumeSeconds > 30;
+  const progressPct = duration && duration > 0 && hasResume
+    ? Math.min(100, (resumeSeconds / duration) * 100)
+    : 0;
+  const isPlaying = props.playingId === item.id;
+  const trackLabel = resolveAlbumTrackLabel(item);
+  const trackNumber = parseAudioTrackName(item.fileName).trackNumber ?? props.index + 1;
+
+  return (
+    <li className={`title-detail-track${isPlaying ? ' is-playing' : ''}`}>
+      <div
+        className="title-detail-track__main"
+        role="button"
+        tabIndex={0}
+        aria-label={t('media.titles.track.play', { label: trackLabel })}
+        onClick={() => {
+          props.onFocus(item.id);
+          props.onPlay(item);
+        }}
+        onDoubleClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          props.onPlay(item);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            props.onFocus(item.id);
+            props.onPlay(item);
+          }
+        }}
+      >
+        <span className="title-detail-track__index">{String(trackNumber).padStart(2, '0')}</span>
+        <div className="title-detail-track__thumb">
+          <MediaThumb item={item} size="row" priority="low" lazy />
+        </div>
+        <div className="title-detail-track__copy">
+          <strong className="title-detail-track__label">{trackLabel}</strong>
+          <span className="title-detail-track__meta">
+            {formatDuration(duration)}
+            {hasResume ? ` · ${t('media.titles.inProgress')}` : ''}
+          </span>
+          {progressPct > 0 && (
+            <div className="title-detail-track__progress" aria-hidden>
+              <span style={{ width: `${progressPct}%` }} />
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="title-detail-track__play-btn"
+          aria-label={t('media.titles.track.play', { label: trackLabel })}
+          onClick={(event) => {
+            event.stopPropagation();
+            props.onPlay(item);
+          }}
+        >
+          {hasResume && !isPlaying ? t('media.library.continueListening') : t('player.play')}
+        </button>
+      </div>
+    </li>
+  );
+}
+
 export const TitleDetailPanel = memo(function TitleDetailPanel(props: TitleDetailPanelProps) {
   const { t } = useI18n();
   const { title } = props;
@@ -231,6 +313,11 @@ export const TitleDetailPanel = memo(function TitleDetailPanel(props: TitleDetai
   const playTarget = resolveTitlePlayTarget(title);
   const counts = formatTitleCountDisplay(title, t, formatDuration);
   const displayEpisodes = title.episodes ?? [];
+  const isAlbum = isAlbumLibraryTitle(title);
+  const albumTracks = useMemo(
+    () => (isAlbum ? sortAlbumTracks(title.items) : []),
+    [isAlbum, title.items]
+  );
   const isSeries = title.mediaType === 'series' && displayEpisodes.length > 0;
   const kindKey = title.mediaType === 'unknown' ? 'group' : title.mediaType;
   const metaRecord = useTitleMetadata(title, 'critical');
@@ -254,7 +341,9 @@ export const TitleDetailPanel = memo(function TitleDetailPanel(props: TitleDetai
   const [refreshNotice, setRefreshNotice] = useState<MetadataRefreshNotice | null>(null);
   const metadataBusy = refreshingMeta || metadataActivity !== 'idle';
   const [localFramesEpoch, setLocalFramesEpoch] = useState(0);
-  const [activeTab, setActiveTab] = useState<TitleDetailTab>(isSeries ? 'episodes' : 'media');
+  const [activeTab, setActiveTab] = useState<TitleDetailTab>(
+    isSeries ? 'episodes' : isAlbum ? 'tracks' : 'media'
+  );
   const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | undefined>(() => {
     const continueId = progress.continueItem?.id;
     if (continueId) {
@@ -309,6 +398,9 @@ export const TitleDetailPanel = memo(function TitleDetailPanel(props: TitleDetai
   const hasHeroStats = heroRating != null || episodeProgress != null;
   const hasCatalogEpisodeTotal = (enriched?.episodeCount ?? 0) > 0;
   const primaryPlayLabel = resolveLocalPlayLabel(title, t);
+  const continueLabel = isAlbum
+    ? t('media.library.continueListening')
+    : t('media.titles.continueWatching');
 
   return (
     <section className="title-detail-panel title-detail-panel--cinema glass-inset">
@@ -355,7 +447,7 @@ export const TitleDetailPanel = memo(function TitleDetailPanel(props: TitleDetai
           <>
             {progress.hasProgress && playTarget && (
               <button type="button" className="primary-action primary-action--shimmer" onClick={() => props.onPlay(playTarget.item)}>
-                {t('media.titles.continueWatching')}
+                {continueLabel}
               </button>
             )}
             {playTarget && (
@@ -491,6 +583,25 @@ export const TitleDetailPanel = memo(function TitleDetailPanel(props: TitleDetai
                       props.onFocusEpisode(itemId);
                     }}
                     onPlayEpisode={props.onPlayEpisode}
+                  />
+                ))}
+              </ul>
+            </section>
+          )}
+          {isAlbum && activeTab === 'tracks' && (
+            <section className="title-detail-tracks">
+              <h2 className="title-detail-tracks__heading">{t('media.titles.trackList')}</h2>
+              <ul className="title-detail-tracks__list">
+                {albumTracks.map((item, index) => (
+                  <AlbumTrackRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    durationById={props.durationById}
+                    playingId={playingId}
+                    t={t}
+                    onPlay={props.onPlayEpisode}
+                    onFocus={props.onFocusEpisode}
                   />
                 ))}
               </ul>

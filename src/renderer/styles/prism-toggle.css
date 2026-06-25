@@ -1,0 +1,387 @@
+/* Animated prism toggle — liquid thumb morph with inertia */
+
+.prism-toggle {
+  --prism-toggle-width: 68px;
+  --prism-toggle-height: 36px;
+  --prism-toggle-pad: 4px;
+  --prism-toggle-thumb-h: calc(var(--prism-toggle-height) - (var(--prism-toggle-pad) * 2));
+  --prism-toggle-thumb-pill: 34px;
+  --prism-toggle-thumb-ball: var(--prism-toggle-thumb-h);
+  --prism-toggle-travel: calc(
+    var(--prism-toggle-width)
+    - (var(--prism-toggle-pad) * 2)
+    - var(--prism-toggle-thumb-pill)
+  );
+  --prism-toggle-well-off: rgba(255, 255, 255, 0.04);
+  --prism-toggle-well-on: rgba(72, 42, 168, 0.38);
+  --prism-toggle-thumb-off: linear-gradient(160deg, rgba(176, 170, 194, 0.78), rgba(122, 116, 138, 0.62));
+  --prism-toggle-thumb-on: linear-gradient(160deg, #c08cff, #6f46ff);
+  --prism-toggle-icon-off: rgba(244, 240, 255, 0.95);
+  --prism-toggle-icon-on: rgba(255, 255, 255, 0.98);
+  --prism-toggle-duration: 320ms;
+  --prism-toggle-ease: cubic-bezier(0.38, 1.12, 0.42, 1);
+  --prism-toggle-radius-flat: 2px;
+  --prism-toggle-radius-round: 999px;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+  width: fit-content;
+  max-width: var(--prism-toggle-width);
+  cursor: pointer;
+  user-select: none;
+}
+
+.prism-toggle.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.prism-toggle__track {
+  position: relative;
+  display: block;
+  width: var(--prism-toggle-width);
+  height: var(--prism-toggle-height);
+  border-radius: var(--prism-toggle-radius-round);
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+}
+
+.prism-toggle__well {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--prism-toggle-well-off);
+  box-shadow:
+    inset 0 3px 9px rgba(0, 0, 0, 0.48),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  transition:
+    background calc(var(--prism-toggle-duration) * 0.85) var(--prism-toggle-ease),
+    box-shadow calc(var(--prism-toggle-duration) * 0.85) var(--prism-toggle-ease);
+}
+
+.prism-toggle.is-checked .prism-toggle__well {
+  background: var(--prism-toggle-well-on);
+  box-shadow:
+    inset 0 3px 10px rgba(18, 6, 48, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 0 22px rgba(116, 78, 255, 0.18);
+}
+
+.prism-toggle__thumb {
+  position: absolute;
+  top: var(--prism-toggle-pad);
+  left: var(--prism-toggle-pad);
+  width: var(--prism-toggle-thumb-pill);
+  height: var(--prism-toggle-thumb-h);
+  border-radius:
+    var(--prism-toggle-radius-round)
+    var(--prism-toggle-radius-flat)
+    var(--prism-toggle-radius-flat)
+    var(--prism-toggle-radius-round);
+  background: var(--prism-toggle-thumb-off);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transform: translate3d(0, 0, 0);
+  transform-origin: center center;
+  backface-visibility: hidden;
+}
+
+.prism-toggle.is-checked:not(.is-anim-to-on):not(.is-anim-to-off) .prism-toggle__thumb {
+  width: var(--prism-toggle-thumb-pill);
+  border-radius:
+    var(--prism-toggle-radius-flat)
+    var(--prism-toggle-radius-round)
+    var(--prism-toggle-radius-round)
+    var(--prism-toggle-radius-flat);
+  background: var(--prism-toggle-thumb-on);
+  transform: translate3d(var(--prism-toggle-travel), 0, 0);
+  box-shadow:
+    0 4px 14px rgba(116, 78, 255, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.16) inset;
+}
+
+.prism-toggle.is-anim-to-on .prism-toggle__thumb {
+  animation: prism-toggle-morph-on var(--prism-toggle-duration) var(--prism-toggle-ease) forwards;
+}
+
+.prism-toggle.is-anim-to-off .prism-toggle__thumb {
+  animation: prism-toggle-morph-off var(--prism-toggle-duration) var(--prism-toggle-ease) forwards;
+}
+
+@keyframes prism-toggle-morph-on {
+  0% {
+    width: var(--prism-toggle-thumb-pill);
+    border-radius:
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-round);
+    transform: translate3d(0, 0, 0);
+    background: var(--prism-toggle-thumb-off);
+  }
+
+  12% {
+    width: var(--prism-toggle-thumb-ball);
+    border-radius: 50%;
+    transform: translate3d(0, 0, 0);
+    background: linear-gradient(160deg, rgba(158, 148, 196, 0.82), rgba(130, 112, 196, 0.74));
+  }
+
+  24% {
+    width: var(--prism-toggle-thumb-ball);
+    border-radius: 50%;
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.2), 0, 0);
+    background: linear-gradient(160deg, rgba(152, 132, 210, 0.84), rgba(138, 98, 220, 0.78));
+  }
+
+  44% {
+    width: var(--prism-toggle-thumb-ball);
+    border-radius: 50%;
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.5), 0, 0);
+    background: linear-gradient(160deg, rgba(176, 122, 252, 0.88), rgba(146, 94, 240, 0.82));
+  }
+
+  56% {
+    width: calc(var(--prism-toggle-thumb-ball) + 2px);
+    border-radius:
+      var(--prism-toggle-radius-flat)
+      12px
+      12px
+      var(--prism-toggle-radius-flat);
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.62), 0, 0);
+    background: linear-gradient(160deg, rgba(186, 128, 255, 0.92), rgba(154, 98, 246, 0.86));
+  }
+
+  68% {
+    width: calc(var(--prism-toggle-thumb-pill) - 5px);
+    border-radius:
+      var(--prism-toggle-radius-flat)
+      20px
+      20px
+      var(--prism-toggle-radius-flat);
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.76), 0, 0);
+    background: linear-gradient(160deg, #c08cff, #7a50ff);
+  }
+
+  82% {
+    width: calc(var(--prism-toggle-thumb-pill) - 1px);
+    border-radius:
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-flat);
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.92), 0, 0);
+    background: var(--prism-toggle-thumb-on);
+  }
+
+  100% {
+    width: var(--prism-toggle-thumb-pill);
+    border-radius:
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-flat);
+    transform: translate3d(var(--prism-toggle-travel), 0, 0);
+    background: var(--prism-toggle-thumb-on);
+  }
+}
+
+@keyframes prism-toggle-morph-off {
+  0% {
+    width: var(--prism-toggle-thumb-pill);
+    border-radius:
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-flat);
+    transform: translate3d(var(--prism-toggle-travel), 0, 0);
+    background: var(--prism-toggle-thumb-on);
+  }
+
+  12% {
+    width: var(--prism-toggle-thumb-ball);
+    border-radius: 50%;
+    transform: translate3d(var(--prism-toggle-travel), 0, 0);
+    background: linear-gradient(160deg, #c08cff, #7a50ff);
+  }
+
+  24% {
+    width: var(--prism-toggle-thumb-ball);
+    border-radius: 50%;
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.8), 0, 0);
+    background: linear-gradient(160deg, rgba(176, 122, 252, 0.88), rgba(146, 94, 240, 0.82));
+  }
+
+  44% {
+    width: var(--prism-toggle-thumb-ball);
+    border-radius: 50%;
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.5), 0, 0);
+    background: linear-gradient(160deg, rgba(152, 132, 210, 0.84), rgba(138, 98, 220, 0.78));
+  }
+
+  56% {
+    width: calc(var(--prism-toggle-thumb-ball) + 2px);
+    border-radius:
+      12px
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-flat)
+      12px;
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.38), 0, 0);
+    background: linear-gradient(160deg, rgba(158, 148, 196, 0.82), rgba(130, 112, 196, 0.74));
+  }
+
+  68% {
+    width: calc(var(--prism-toggle-thumb-pill) - 5px);
+    border-radius:
+      20px
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-flat)
+      20px;
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.24), 0, 0);
+    background: linear-gradient(160deg, rgba(176, 170, 194, 0.78), rgba(122, 116, 138, 0.62));
+  }
+
+  82% {
+    width: calc(var(--prism-toggle-thumb-pill) - 1px);
+    border-radius:
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-round);
+    transform: translate3d(calc(var(--prism-toggle-travel) * 0.08), 0, 0);
+    background: var(--prism-toggle-thumb-off);
+  }
+
+  100% {
+    width: var(--prism-toggle-thumb-pill);
+    border-radius:
+      var(--prism-toggle-radius-round)
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-flat)
+      var(--prism-toggle-radius-round);
+    transform: translate3d(0, 0, 0);
+    background: var(--prism-toggle-thumb-off);
+  }
+}
+
+.prism-toggle__icon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition:
+    opacity 110ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.38, 1.12, 0.42, 1);
+}
+
+.prism-toggle__icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.prism-toggle__icon--off {
+  color: var(--prism-toggle-icon-off);
+  opacity: 1;
+  transform: scale(1);
+}
+
+.prism-toggle__icon--on {
+  color: var(--prism-toggle-icon-on);
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+.prism-toggle.is-checked:not(.is-anim-to-on):not(.is-anim-to-off) .prism-toggle__icon--off {
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+.prism-toggle.is-checked:not(.is-anim-to-on):not(.is-anim-to-off) .prism-toggle__icon--on {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.prism-toggle.is-anim-to-on .prism-toggle__icon--off {
+  opacity: 0;
+  transform: scale(0.62);
+  transition-delay: 0ms;
+  transition-duration: 80ms;
+}
+
+.prism-toggle.is-anim-to-on .prism-toggle__icon--on {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 180ms;
+  transition-duration: 120ms;
+}
+
+.prism-toggle.is-anim-to-off .prism-toggle__icon--on {
+  opacity: 0;
+  transform: scale(0.62);
+  transition-delay: 0ms;
+  transition-duration: 80ms;
+}
+
+.prism-toggle.is-anim-to-off .prism-toggle__icon--off {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 180ms;
+  transition-duration: 120ms;
+}
+
+.prism-toggle__input:focus-visible + .prism-toggle__track {
+  outline: 2px solid var(--focus-ring-color, rgba(165, 108, 255, 0.72));
+  outline-offset: var(--focus-ring-offset, 2px);
+}
+
+.settings-toggle .prism-toggle,
+.settings-toggle--inline .prism-toggle,
+.prism-onboarding__toggle .prism-toggle {
+  margin-top: 1px;
+}
+
+.settings-toggle--stacked .prism-toggle {
+  align-self: flex-end;
+  margin-top: 8px;
+}
+
+.browser-warning-modal__remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.browser-warning-modal__remember .prism-toggle {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prism-toggle__thumb {
+    transition:
+      transform 140ms ease,
+      background 140ms ease,
+      border-radius 140ms ease,
+      width 140ms ease;
+  }
+
+  .prism-toggle.is-anim-to-on .prism-toggle__thumb,
+  .prism-toggle.is-anim-to-off .prism-toggle__thumb {
+    animation: none;
+  }
+
+  .prism-toggle.is-checked:not(.is-anim-to-on):not(.is-anim-to-off) .prism-toggle__thumb {
+    transform: translate3d(var(--prism-toggle-travel), 0, 0);
+  }
+
+  .prism-toggle__icon {
+    transition-duration: 80ms;
+  }
+}

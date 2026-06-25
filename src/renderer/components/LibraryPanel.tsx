@@ -4,6 +4,9 @@ import type { AppSettings, MediaFilter, Playlist } from '../../shared/types';
 
 import { useI18n } from '../i18n/I18nProvider';
 import { useStore } from '../lib/useStore';
+import { useAppShell } from '../app/AppShellContext';
+import { useAppLayoutMode } from '../hooks/useAppLayoutMode';
+import { AnimatedListItem } from './AnimatedListItem';
 import { libraryRouterStore } from '../features/library/libraryRouterStore';
 import {
   changeLibrarySecondary,
@@ -14,6 +17,7 @@ import {
 import { sidebarChromeStore, toggleSidebarCollapsed } from '../features/ui/sidebarChromeStore';
 import { LibraryWorkspaceNav } from './library/LibraryWorkspaceNav';
 import { LibrarySidebarContext } from './library/LibrarySidebarContext';
+import { DownloadActivityButton } from './library/DownloadActivityButton';
 
 interface LibraryPanelProps {
   settings?: AppSettings;
@@ -44,34 +48,254 @@ const FILTER_ICONS: Record<MediaFilter, string> = {
   recent: '↺',
 };
 
+const PEEK_MOTION_MS = 260;
+
 export const LibraryPanel = memo(function LibraryPanel(props: LibraryPanelProps) {
   const { t } = useI18n();
+  const shell = useAppShell();
+  const layoutMode = useAppLayoutMode();
   const collapsed = useStore(sidebarChromeStore, (state) => state.collapsed);
+  const pinSidebar = shell.settings.shell?.pinSidebar ?? false;
+  const peekEnabled = collapsed && !pinSidebar && layoutMode !== 'narrow';
   const [peekOpen, setPeekOpen] = useState(false);
-  const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [peekClosing, setPeekClosing] = useState(false);
+  const peekOpenRef = useRef(false);
+  const peekClosingRef = useRef(false);
+  const panelRef = useRef<HTMLElement>(null);
+  const peekCloseTimerRef = useRef<number | null>(null);
+  peekOpenRef.current = peekOpen;
+  peekClosingRef.current = peekClosing;
+  const peekContentVisible = peekOpen;
+  const sidebarContentExpanded = !collapsed || peekContentVisible;
+
+  const clearPeekCloseTimer = useCallback(() => {
+    if (!peekCloseTimerRef.current) return;
+    window.clearTimeout(peekCloseTimerRef.current);
+    peekCloseTimerRef.current = null;
+  }, []);
+
+  const finishPeekClose = useCallback(() => {
+    peekClosingRef.current = false;
+    setPeekClosing(false);
+    clearPeekCloseTimer();
+  }, [clearPeekCloseTimer]);
+
+  const closePeek = useCallback(() => {
+    if (!peekOpenRef.current || peekClosingRef.current) return;
+    setPeekOpen(false);
+    peekClosingRef.current = true;
+    setPeekClosing(true);
+    clearPeekCloseTimer();
+  }, [clearPeekCloseTimer]);
+
+  useEffect(() => {
+    if (!peekClosing || !collapsed) return;
+    const panel = panelRef.current;
+    if (!panel) {
+      finishPeekClose();
+      return;
+    }
+
+    const onTransitionEnd = (event: TransitionEvent) => {
+      if (event.target !== panel) return;
+      if (event.propertyName !== 'width' && event.propertyName !== 'max-width') return;
+      finishPeekClose();
+    };
+
+    panel.addEventListener('transitionend', onTransitionEnd);
+    peekCloseTimerRef.current = window.setTimeout(finishPeekClose, PEEK_MOTION_MS + 64);
+    return () => {
+      panel.removeEventListener('transitionend', onTransitionEnd);
+      clearPeekCloseTimer();
+    };
+  }, [peekClosing, collapsed, finishPeekClose, clearPeekCloseTimer]);
+
+  useEffect(() => {
+    if (!collapsed) {
+      clearPeekCloseTimer();
+      setPeekOpen(false);
+      setPeekClosing(false);
+      peekClosingRef.current = false;
+    }
+  }, [collapsed, clearPeekCloseTimer]);
+
+  useEffect(() => {
+    if (peekEnabled) return;
+    clearPeekCloseTimer();
+    setPeekOpen(false);
+    setPeekClosing(false);
+    peekClosingRef.current = false;
+  }, [peekEnabled, clearPeekCloseTimer]);
+
+  useEffect(() => {
+    if (!peekEnabled) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (!peekOpenRef.current) return;
+      event.preventDefault();
+      closePeek();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [peekEnabled, closePeek]);
   const route = useStore(libraryRouterStore, (state) => state.route);
   const workspacePrimary = useMemo(() => workspacePrimaryFromRoute(route), [route]);
   const librarySecondary = useMemo(() => librarySecondaryFromRoute(route), [route]);
-  const showFileFilters = workspacePrimary === 'library' && librarySecondary === 'files' && (!collapsed || peekOpen);
-  const showPlaylists = workspacePrimary === 'library' && (!collapsed || peekOpen);
-  const showContext = workspacePrimary !== 'library' && (!collapsed || peekOpen);
+  const onDownloadsPage = route.page === 'downloads';
+  const showFileFilters = workspacePrimary === 'library' && librarySecondary === 'files' && sidebarContentExpanded && !onDownloadsPage;
+  const showPlaylists = workspacePrimary === 'library' && sidebarContentExpanded && !onDownloadsPage;
+  const showContext = (workspacePrimary !== 'library' || onDownloadsPage) && sidebarContentExpanded;
 
-  const handleMouseEnter = useCallback(() => {
-    if (!collapsed) return;
-    peekTimerRef.current = setTimeout(() => setPeekOpen(true), 100);
-  }, [collapsed]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (peekTimerRef.current) {
-      clearTimeout(peekTimerRef.current);
-      peekTimerRef.current = null;
+  const handleToggleCollapse = () => {
+    if (pinSidebar) return;
+    if (peekOpen || peekClosing) {
+      clearPeekCloseTimer();
+      setPeekOpen(false);
+      setPeekClosing(false);
+      peekClosingRef.current = false;
     }
-    setPeekOpen(false);
-  }, []);
+    toggleSidebarCollapsed();
+  };
 
-  useEffect(() => () => {
-    if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
-  }, []);
+  useEffect(() => {
+    if (!peekEnabled) {
+      return;
+    }
+
+    const SLOP = 14;
+    const OPEN_MS = 120;
+    const CLOSE_MS = 180;
+    const GUARD_MS = 280;
+
+    let openTimer: ReturnType<typeof setTimeout> | null = null;
+    let closeTimer: ReturnType<typeof setTimeout> | null = null;
+    let openedAt = 0;
+
+    const clearOpenTimer = () => {
+      if (!openTimer) return;
+      clearTimeout(openTimer);
+      openTimer = null;
+    };
+
+    const clearCloseTimer = () => {
+      if (!closeTimer) return;
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    };
+
+    const inRect = (x: number, y: number, rect: DOMRect, pad = 0) => (
+      x >= rect.left - pad
+      && x <= rect.right + pad
+      && y >= rect.top - pad
+      && y <= rect.bottom + pad
+    );
+
+    const getRailRect = (): DOMRect | null => {
+      const panel = panelRef.current;
+      const content = panel?.closest('.app-content');
+      if (!panel || !content) return null;
+
+      const contentRect = content.getBoundingClientRect();
+      const styles = getComputedStyle(content);
+      const padLeft = parseFloat(styles.paddingLeft) || 0;
+      const padTop = parseFloat(styles.paddingTop) || 0;
+      const padBottom = parseFloat(styles.paddingBottom) || 0;
+      const railWidth = parseFloat(styles.getPropertyValue('--sidebar-width-collapsed')) || 72;
+
+      return new DOMRect(
+        contentRect.left + padLeft,
+        contentRect.top + padTop,
+        railWidth,
+        contentRect.height - padTop - padBottom,
+      );
+    };
+
+    const isOverRightPanel = (x: number, y: number) => {
+      const node = document.querySelector<HTMLElement>('.smart-right-panel, .queue-drawer-host.is-open');
+      if (!node) return false;
+      return inRect(x, y, node.getBoundingClientRect(), SLOP);
+    };
+
+    const isOverSidebar = (x: number, y: number) => {
+      const rail = getRailRect();
+      if (!rail) return false;
+
+      if (peekOpenRef.current || peekClosingRef.current) {
+        const panelRect = panelRef.current?.getBoundingClientRect();
+        if (panelRect && inRect(x, y, panelRect, SLOP)) return true;
+      }
+
+      return inRect(x, y, rail, SLOP);
+    };
+
+    const scheduleOpen = () => {
+      if (peekOpenRef.current) {
+        clearCloseTimer();
+        return;
+      }
+
+      if (peekClosingRef.current) {
+        clearCloseTimer();
+        clearPeekCloseTimer();
+        peekClosingRef.current = false;
+        setPeekClosing(false);
+        setPeekOpen(true);
+        openedAt = Date.now();
+        return;
+      }
+
+      if (openTimer) return;
+      clearCloseTimer();
+      openTimer = setTimeout(() => {
+        openTimer = null;
+        openedAt = Date.now();
+        peekClosingRef.current = false;
+        clearPeekCloseTimer();
+        setPeekClosing(false);
+        setPeekOpen(true);
+      }, OPEN_MS);
+    };
+
+    const scheduleClose = () => {
+      if (Date.now() - openedAt < GUARD_MS) return;
+      if (!peekOpenRef.current || peekClosingRef.current) return;
+      clearOpenTimer();
+      if (closeTimer) return;
+      closeTimer = setTimeout(() => {
+        closeTimer = null;
+        closePeek();
+      }, CLOSE_MS);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      const { clientX: x, clientY: y } = event;
+
+      if (isOverSidebar(x, y)) {
+        scheduleOpen();
+        clearCloseTimer();
+        return;
+      }
+
+      if (isOverRightPanel(x, y)) {
+        clearOpenTimer();
+        clearCloseTimer();
+        if (peekOpenRef.current) closePeek();
+        return;
+      }
+
+      scheduleClose();
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      clearOpenTimer();
+      clearCloseTimer();
+      clearPeekCloseTimer();
+    };
+  }, [peekEnabled, closePeek, clearPeekCloseTimer, finishPeekClose]);
 
   const filters: Array<{ id: MediaFilter; label: string }> = [
     { id: 'all', label: t('library.filter.all') },
@@ -83,24 +307,31 @@ export const LibraryPanel = memo(function LibraryPanel(props: LibraryPanelProps)
 
   return (
     <aside
+      ref={panelRef}
       className={[
         'library-panel',
         collapsed ? 'library-panel--collapsed' : '',
         collapsed && peekOpen ? 'library-panel--peek' : '',
+        peekClosing ? 'library-panel--peek-closing' : '',
       ].filter(Boolean).join(' ')}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       <div className="library-panel__header">
         <button
           type="button"
           className="ghost-button library-panel__collapse-btn"
-          onClick={toggleSidebarCollapsed}
+          onClick={handleToggleCollapse}
+          disabled={pinSidebar}
           aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-          title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+          title={
+            pinSidebar
+              ? t('settings.shell.pinSidebar')
+              : collapsed
+                ? t('sidebar.expand')
+                : t('sidebar.collapse')
+          }
         >
           <span className="library-panel__collapse-icon" aria-hidden>
-            {collapsed ? '⫸' : '⫷'}
+            {collapsed ? '»' : '«'}
           </span>
         </button>
         <button
@@ -117,7 +348,8 @@ export const LibraryPanel = memo(function LibraryPanel(props: LibraryPanelProps)
       <div className="library-panel__scroll sidebar-body">
         <LibraryWorkspaceNav
           layout="sidebar"
-          collapsed={collapsed && !peekOpen}
+          collapsed={collapsed}
+          labelsHidden={collapsed && !peekContentVisible}
           primary={workspacePrimary}
           librarySecondary={librarySecondary}
           onPrimaryChange={changeWorkspacePrimary}
@@ -157,8 +389,8 @@ export const LibraryPanel = memo(function LibraryPanel(props: LibraryPanelProps)
             <p className="section-label">{t('library.playlists')}</p>
             <div className="playlist-stack">
               {props.playlists.map((playlist) => (
+                <AnimatedListItem key={playlist.id} itemKey={playlist.id}>
                 <div
-                  key={playlist.id}
                   className={props.activePlaylistId === playlist.id ? 'playlist-chip active' : 'playlist-chip'}
                 >
                   <button
@@ -187,6 +419,7 @@ export const LibraryPanel = memo(function LibraryPanel(props: LibraryPanelProps)
                     </button>
                   )}
                 </div>
+                </AnimatedListItem>
               ))}
             </div>
             <button type="button" className="ghost-button wide" onClick={props.onCreatePlaylist}>
@@ -197,11 +430,12 @@ export const LibraryPanel = memo(function LibraryPanel(props: LibraryPanelProps)
       </div>
 
       <div className="panel-footer library-panel__footer sidebar-footer">
+        <DownloadActivityButton collapsed={collapsed} peekExpanded={peekContentVisible} />
         <p
           className="library-panel__indexed"
           title={t('library.foldersIndexed', { count: props.settings?.libraryFolders.length ?? 0 })}
         >
-          {collapsed && !peekOpen ? (
+          {collapsed && !peekContentVisible ? (
             <span className="library-panel__indexed-compact" aria-label={t('library.foldersIndexed', { count: props.settings?.libraryFolders.length ?? 0 })}>
               {props.settings?.libraryFolders.length ?? 0}
             </span>

@@ -1,0 +1,52 @@
+node_modules/
+dist/
+coverage/
+.vite/
+*.log
+*.local
+out/
+release/
+src-tauri/target/
+
+# Bundled native binaries & models (100MB+ — install locally, not in git)
+# See src-tauri/resources/bin/windows/README.txt and resources/models/README.txt
+src-tauri/resources/bin/windows/*
+!src-tauri/resources/bin/windows/README.txt
+src-tauri/resources/models/*
+!src-tauri/resources/models/README.txt
+
+# Nested accidental clone / submodule artifact
+Virelia Prism/
+
+# Assistant / IDE tooling (never commit)
+.cursor/
+.cursorrules
+*.cursorrules
+.agent/
+.claude/
+.continue/
+.copilot/
+.aider*
+.windsurf/
+.superpowers/
+
+# Internal design & planning artifacts (keep local only)
+docs/superpowers/
+docs/PHASE*.md
+docs/TAURI_PHASE*.md
+docs/UNIVERSAL_MEDIA_PLAYER_*.md
+docs/*_QA.md
+docs/qa-checklist.md
+docs/LAYOUT_QA.md
+docs/MOTION_QA.md
+docs/PLAYBACK_QA.md
+docs/TAURI_RUNTIME.md
+docs/PHASE3_ARCHITECTURE.md
+
+# OS / IDE noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

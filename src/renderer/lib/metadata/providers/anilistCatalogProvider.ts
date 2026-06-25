@@ -2,6 +2,7 @@ import type { CatalogMediaType, CatalogTitle, MetadataSearchResult } from '../ty
 import { formatCatalogRef } from '../catalogRef';
 import { metadataCacheGet, metadataCacheSet, METADATA_CACHE_TTL } from '../metadataCache';
 import { readOnlineCatalogSettings } from '../metadataSettings';
+import { fetchWithRetry } from '../../network/fetchWithRetry';
 import { anilistProvider } from '../../mediaIntelligence/metadata/providers/anilistProvider';
 import type { EnrichedTitleMetadata } from '../../../../shared/titleMetadataTypes';
 import type { MetadataProvider, MetadataSearchOptions } from '../metadataProvider';
@@ -63,11 +64,15 @@ function toSearchResult(media: {
 }
 
 async function anilistGraphql<T>(query: string, variables: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
-  const response = await fetch('https://graphql.anilist.co', {
+  const response = await fetchWithRetry('https://graphql.anilist.co', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ query, variables }),
     signal,
+    timeoutMs: 25_000,
+    attempts: 3,
+    retryDelayMs: 1_200,
+    retryOnStatuses: [429, 502, 503, 504],
   });
   if (!response.ok) throw new Error(`AniList HTTP ${response.status}`);
   const json = await response.json() as { data?: T; errors?: unknown[] };
@@ -190,6 +195,11 @@ export const anilistCatalogProvider: MetadataProvider = {
     if (!Number.isFinite(numericId)) return null;
     const enriched = await anilistProvider.getDetails(providerId, 'en', 1) as EnrichedTitleMetadata | null;
     if (enriched) {
+      metadataCacheSet(
+        `enriched:${formatCatalogRef('anilist', providerId)}`,
+        enriched,
+        METADATA_CACHE_TTL.titleDetails,
+      );
       const title = toCatalogTitle({
         id: numericId,
         siteUrl: enriched.externalUrl,

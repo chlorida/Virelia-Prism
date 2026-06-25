@@ -39,7 +39,7 @@ describe('SettingsStore', () => {
 
     const loaded = await store.load();
 
-    expect(loaded.settingsSchemaVersion).toBe(4);
+    expect(loaded.settingsSchemaVersion).toBe(5);
     expect(loaded.metadata.enableOnlineLookup).toBe(false);
     expect(loaded.discovery.disableOnlineDiscovery).toBe(true);
     expect(loaded.discovery.enableOnlineCatalog).toBe(false);

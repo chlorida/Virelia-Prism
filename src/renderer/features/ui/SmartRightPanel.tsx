@@ -15,10 +15,12 @@ import { usePlaybackSelector } from '../../playback/usePlayback';
 import { clearQueue, removeQueueItem, reorderQueue } from '../queue/queueStore';
 import { playUiSound } from '../../services/uiAudioService';
 import { buildLibraryTitles } from '../../lib/mediaIntelligence/libraryTitleService';
+import { filterBrowsableLibraryTitles } from '../../lib/mediaIntelligence/libraryTitleFilters';
 import { getCompactForYouItems } from '../../lib/metadata/discoverFeedService';
 import { navigateToCatalogTitle, navigateToLocalTitle } from '../library/libraryRouterStore';
 import { watchlistStore } from '../library/watchlistStore';
 import { registerSmartRightPanelMount } from './rightRailGuard';
+import { expandRightPanelTabs } from './sidebarChromeStore';
 import { UpNextCard } from '../../components/watch/UpNextCard';
 import { WatchSeriesHero } from '../../components/watch/WatchSeriesHero';
 import { MediaThumb } from '../../components/watch/MediaThumb';
@@ -48,9 +50,11 @@ function resolveUpNextSectionLabel(
 
 interface SmartRightPanelProps {
   presentation?: 'docked' | 'drawer';
+  tabsMode?: 'minimal' | 'full';
 }
 
 export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPanelProps) {
+  const tabsMode = props.tabsMode ?? 'full';
   const { t, locale } = useI18n();
   const mediaLang = useMediaDisplayLanguage();
   const shell = useAppShell();
@@ -79,7 +83,7 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
   }, [current?.id, upNextPlan.hero?.item.id, upNextPlan.sections.length]);
 
   const libraryTitles = useMemo(
-    () => buildLibraryTitles(derived.library.media, mediaLang),
+    () => filterBrowsableLibraryTitles(buildLibraryTitles(derived.library.media, mediaLang)),
     [derived.library.media, mediaLang]
   );
 
@@ -107,6 +111,15 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
   );
 
   useEffect(() => registerSmartRightPanelMount(), []);
+
+  useEffect(() => {
+    if (shell.queue.length > 0 || current) {
+      expandRightPanelTabs();
+    }
+  }, [shell.queue.length, current?.id]);
+
+  const showFullTabs = tabsMode === 'full';
+  const effectiveTab = showFullTabs ? tab : 'upNext';
 
   const queueEntries = useMemo(
     () => shell.queue.map((queueItem) => ({
@@ -141,22 +154,26 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
   return (
     <aside className={`smart-right-panel smart-glass-panel${presentationClass}`}>
       <div className="smart-panel__header">
-        <div className="smart-panel__tabs">
-          {(['queue', 'upNext', 'recommendations', 'info', 'history'] as const).map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={tab === id ? 'smart-tab-pill is-active' : 'smart-tab-pill'}
-              onClick={() => setTab(id)}
-            >
-              {t(`smartPanel.tab.${id}`)}
-            </button>
-          ))}
-        </div>
+        {showFullTabs ? (
+          <div className="smart-panel__tabs">
+            {(['queue', 'upNext', 'recommendations', 'info', 'history'] as const).map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={tab === id ? 'smart-tab-pill is-active' : 'smart-tab-pill'}
+                onClick={() => setTab(id)}
+              >
+                {t(`smartPanel.tab.${id}`)}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="smart-panel__compact-label">{t('smartPanel.tab.upNext')}</p>
+        )}
       </div>
 
-      <div key={tab} className="smart-panel__body prism-tab-content-enter">
-        {tab === 'upNext' && shell.queue.length > 0 && (
+      <div key={effectiveTab} className="smart-panel__body prism-tab-content-enter">
+        {effectiveTab === 'upNext' && showFullTabs && shell.queue.length > 0 && (
           <div className="smart-panel__queue-hint glass-inset">
             <p className="smart-panel__section-label">{t('smartPanel.queue.activeHint')}</p>
             <button type="button" className="ghost-button" onClick={() => setTab('queue')}>
@@ -165,11 +182,11 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
           </div>
         )}
 
-        {tab === 'upNext' && current?.kind === 'video' && (
+        {effectiveTab === 'upNext' && current?.kind === 'video' && (
           <WatchSeriesHero plan={upNextPlan} />
         )}
 
-        {tab === 'upNext' && upNextPlan.hero && (
+        {effectiveTab === 'upNext' && upNextPlan.hero && (
           <UpNextCard
             entry={upNextPlan.hero}
             variant="hero"
@@ -178,7 +195,7 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
           />
         )}
 
-        {tab === 'queue' && (
+        {effectiveTab === 'queue' && (
           <>
             {queueEntries.length === 0 ? (
               <div className="smart-panel__empty glass-inset">
@@ -231,7 +248,7 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
           </>
         )}
 
-        {tab === 'upNext' && (
+        {effectiveTab === 'upNext' && (
           <div className="smart-panel__up-next-list">
             {upNextPlan.sections.map((section) => (
               <div key={section.id} className="smart-panel__section">
@@ -259,7 +276,7 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
           </div>
         )}
 
-        {tab === 'recommendations' && (
+        {effectiveTab === 'recommendations' && (
           <div className="smart-panel__up-next-list">
             {recommendations.length === 0 ? (
               <div className="smart-panel__empty glass-inset">
@@ -300,7 +317,7 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
           </div>
         )}
 
-        {tab === 'info' && current && (
+        {effectiveTab === 'info' && current && (
           <SmartPanelInfoTab
             current={current}
             mediaLang={mediaLang}
@@ -313,7 +330,7 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
           />
         )}
 
-        {tab === 'history' && (
+        {effectiveTab === 'history' && (
           <div className="smart-panel__up-next-list">
             {derived.historyItems.length === 0 ? (
               <div className="smart-panel__empty glass-inset">
@@ -337,6 +354,16 @@ export const SmartRightPanel = memo(function SmartRightPanel(props: SmartRightPa
               ))
             )}
           </div>
+        )}
+
+        {!showFullTabs && (
+          <button
+            type="button"
+            className="ghost-button smart-panel__expand-tabs"
+            onClick={() => expandRightPanelTabs()}
+          >
+            {t('shell.rightPanel.showMore')}
+          </button>
         )}
       </div>
     </aside>

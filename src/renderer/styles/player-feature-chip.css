@@ -1,0 +1,83 @@
+/* Feature chips — subtitles, character ID (aligned with speed-menu chip) */
+
+.player-feature-chip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f0eaff;
+  cursor: pointer;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.28s ease,
+    transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.player-feature-chip:hover:not(:disabled) {
+  background: rgba(165, 108, 255, 0.16);
+  border-color: rgba(165, 108, 255, 0.38);
+}
+
+.player-feature-chip.is-open {
+  background: rgba(165, 108, 255, 0.22);
+  border-color: rgba(165, 108, 255, 0.52);
+  box-shadow:
+    0 0 0 1px rgba(128, 232, 255, 0.18),
+    0 8px 24px rgba(165, 108, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.player-feature-chip.is-on:not(.is-open) {
+  color: #d4b8ff;
+  border-color: rgba(165, 108, 255, 0.42);
+  background: rgba(165, 108, 255, 0.14);
+}
+
+.player-feature-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.player-feature-chip__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-feature-chip__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a56cff, #6ec8ff);
+  color: #0c0816;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.player-feature-chip__spinner {
+  position: absolute;
+  inset: 7px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #c4a0ff;
+  border-radius: 50%;
+  animation: videoSpin 0.85s linear infinite;
+}
+
+.video-controls--cinema .player-feature-chip {
+  width: 40px;
+  height: 40px;
+}

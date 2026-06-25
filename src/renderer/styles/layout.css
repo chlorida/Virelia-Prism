@@ -32,7 +32,18 @@
   grid-row: 3;
   min-height: 0;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   padding: 0 var(--panel-gap) clamp(14px, 2.4vh, 22px);
+}
+
+.app-player:has(.speed-menu.is-open) {
+  overflow: visible;
+  z-index: 40;
+}
+
+.app-frame:has(.speed-menu.is-open) {
+  overflow: visible;
 }
 
 .app-content {
@@ -45,7 +56,7 @@
     minmax(0, 1fr)
     minmax(0, var(--queue-width));
   gap: var(--panel-gap);
-  padding: var(--panel-gap);
+  padding: max(12px, var(--panel-gap));
   padding-bottom: 0;
   overflow: hidden;
   position: relative;
@@ -77,10 +88,6 @@
   --sidebar-width: var(--sidebar-width-collapsed);
 }
 
-.app-content:has(.library-panel--peek) {
-  --sidebar-width: clamp(228px, 15vw, 272px);
-}
-
 .app-content--booting {
   visibility: hidden;
 }
@@ -100,6 +107,68 @@
   align-self: stretch;
   min-height: 0;
   max-height: 100%;
+}
+
+.app-content > .library-panel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.app-content--sidebar-collapsed > .library-panel {
+  overflow: visible;
+  z-index: 6;
+}
+
+.app-content > .media-list-host,
+.app-content > .watch-main-host {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.app-frame--watch-mode .app-content > .watch-main-host {
+  grid-column: 1;
+}
+
+.app-content > .queue-panel,
+.app-content > .queue-drawer-host,
+.app-content > .smart-right-panel.smart-panel--docked {
+  grid-column: 3;
+  grid-row: 1;
+  max-width: 100%;
+}
+
+.app-content > .smart-right-panel.smart-panel--docked {
+  z-index: 8;
+  align-self: stretch;
+  min-height: 0;
+  border-radius: var(--panel-radius, 20px);
+  overflow: hidden;
+}
+
+.app-content--queue-docked {
+  grid-template-columns:
+    minmax(0, var(--sidebar-width))
+    minmax(0, 1fr)
+    minmax(0, var(--queue-width));
+}
+
+.app-content--right-hidden {
+  grid-template-columns: minmax(0, var(--sidebar-width)) minmax(0, 1fr);
+}
+
+.app-content--right-hidden > .smart-right-panel,
+.app-content--right-hidden > .queue-drawer-host {
+  display: none;
+}
+
+.app-frame--onboarding-active .smart-right-panel,
+.app-frame--onboarding-active .queue-drawer-host {
+  display: none !important;
+}
+
+.app-frame--onboarding-active.app-content--queue-docked,
+.app-frame--onboarding-active .app-content--queue-docked {
+  grid-template-columns: minmax(0, var(--sidebar-width)) minmax(0, 1fr);
 }
 
 .app-frame--mode-video-theater .app-content {
@@ -371,8 +440,13 @@
   flex-direction: column;
   gap: 8px;
   margin: 0;
+  border-radius: var(--panel-radius, 20px);
+  overflow: hidden;
   transform: translateX(calc(100% + var(--panel-gap) + 12px));
-  transition: transform 220ms ease, opacity 220ms ease;
+  transition:
+    transform 280ms var(--motion-ease-out, ease),
+    opacity 220ms ease,
+    box-shadow 280ms var(--motion-ease-out, ease);
   pointer-events: none;
   opacity: 0;
 }
@@ -391,6 +465,7 @@
   transform: translateX(0);
   pointer-events: auto;
   opacity: 1;
+  box-shadow: var(--shadow), 0 12px 48px rgba(0, 0, 0, 0.45);
 }
 
 .app-content--queue-drawer .queue-drawer__close {
@@ -406,13 +481,19 @@
 @media (max-width: 1100px) {
   .app-content {
     --sidebar-width: clamp(200px, 22vw, 260px);
+    --queue-width: clamp(220px, 26vw, 300px);
+  }
+
+  .app-player {
+    padding-inline: max(12px, var(--panel-gap));
   }
 }
 
 /* —— Compact: narrower sidebar —— */
 @media (max-width: 959px) {
   .app-content {
-    --sidebar-width: clamp(200px, 30vw, 240px);
+    --sidebar-width: var(--sidebar-width-collapsed);
+    --queue-width: clamp(200px, 32vw, 260px);
   }
 
   :root {
@@ -450,6 +531,14 @@
     transform: translateX(0);
     pointer-events: auto;
     opacity: 1;
+  }
+
+  .app-content:not(.app-content--sidebar-open) > .library-panel.library-panel--collapsed {
+    transform: translateX(calc(-100% - var(--panel-gap) - 8px));
+    pointer-events: none;
+    opacity: 0;
+    width: min(300px, calc(100vw - var(--panel-gap) * 2));
+    max-width: 300px;
   }
 
   .topbar {

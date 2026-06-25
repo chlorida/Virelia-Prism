@@ -107,11 +107,12 @@ export const WatchlistPage = memo(function WatchlistPage(props: WatchlistPagePro
       </div>
 
       {filtered.length === 0 ? (
-        <div className="watchlist-page__empty glass-inset">
+        <div className="watchlist-page__empty glass-inset prism-empty-rise">
           <p>{t('watchlist.empty.title')}</p>
           <p className="muted">{t('watchlist.empty.detail')}</p>
         </div>
       ) : (
+        <section className="watchlist-page__shelf library-browse-row">
         <CatalogTitleShelf
           listScopeKey={`watchlist-${filter}`}
           items={shelfItems}
@@ -138,6 +139,7 @@ export const WatchlistPage = memo(function WatchlistPage(props: WatchlistPagePro
             );
           }}
         />
+        </section>
       )}
     </section>
   );

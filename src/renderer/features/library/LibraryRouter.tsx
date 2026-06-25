@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 import type { MediaItem } from '../../../shared/types';
 import type { LibraryTitle } from '../../lib/mediaIntelligence/types';
 import { useStore } from '../../lib/useStore';
@@ -10,6 +10,7 @@ import { TitleMediaGrid } from '../../components/TitleMediaGrid';
 import { VirtualMediaTable } from '../../components/VirtualMediaTable';
 import { MediaDiscoveryCard } from '../../components/library/MediaDiscoveryCard';
 import { DiscoverPage } from './pages/DiscoverPage';
+import { DownloadsPage } from './pages/DownloadsPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import {
   findLibraryTitleById,
@@ -31,9 +32,12 @@ import type { Playlist } from '../../../shared/types';
 import type { PrismRoute } from './libraryRouterTypes';
 import { LibraryPageEnter } from './LibraryPageEnter';
 import type { LibraryViewMode } from '../../components/MediaList';
+import type { ContentMode } from '../content/contentModeTypes';
 import { useI18n } from '../../i18n/I18nProvider';
+import { useTitleContextMenu } from '../../hooks/useTitleContextMenu';
 
-function resolveRouteKey(route: PrismRoute): string {
+function resolveRouteKey(route: PrismRoute, contentMode?: ContentMode): string {
+  const base = (() => {
   switch (route.page) {
     case 'title':
       return `title-${route.localTitleId}`;
@@ -45,14 +49,22 @@ function resolveRouteKey(route: PrismRoute): string {
       return `catalog-${route.catalogTitleId}-${route.page}`;
     case 'files':
       return 'files';
+    case 'downloads':
+      return 'downloads';
     default:
       return route.page;
   }
+  })();
+  if ((route.page === 'home' || route.page === 'files') && contentMode === 'music') {
+    return `${base}:music`;
+  }
+  return base;
 }
 
 interface LibraryRouterProps {
   viewMode: LibraryViewMode;
   libraryMode: boolean;
+  contentMode?: ContentMode;
   libraryTitles: LibraryTitle[];
   items: MediaItem[];
   durationById: Record<string, number>;
@@ -93,7 +105,7 @@ function titleNewestMtime(title: LibraryTitle): number {
 export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterProps) {
   const { t } = useI18n();
   const route = useStore(libraryRouterStore, (s) => s.route);
-  const routeKey = resolveRouteKey(route);
+  const routeKey = resolveRouteKey(route, props.contentMode);
 
   const navigateLibraryHome = () => {
     props.onQueryChange('');
@@ -102,16 +114,32 @@ export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterPro
   };
 
   const recentlyAdded = useMemo(() => {
-    if (props.libraryTitles.length <= 6) return [];
+    if (props.contentMode === 'music' || props.libraryTitles.length <= 6) return [];
     return [...props.libraryTitles]
       .sort((a, b) => titleNewestMtime(b) - titleNewestMtime(a))
       .slice(0, 4);
-  }, [props.libraryTitles]);
+  }, [props.libraryTitles, props.contentMode]);
 
   const excludeTitleIds = useMemo(
     () => new Set(recentlyAdded.map((title) => title.id)),
     [recentlyAdded]
   );
+
+  const openTitleFromMenu = useCallback((title: LibraryTitle) => {
+    playUiSound('open');
+    navigateToLocalTitle(title.id);
+    const focus = resolveTitlePlayTarget(title)?.item;
+    if (focus) props.onFocusRow(focus.id);
+  }, [props.onFocusRow]);
+
+  const { openTitleContextMenu, contextMenu } = useTitleContextMenu({
+    playlists: props.playlists,
+    onPlay: props.onPlay,
+    onQueue: props.onQueue,
+    onFavorite: props.onFavorite,
+    onAddToPlaylist: props.onAddToPlaylist,
+    onOpenTitle: openTitleFromMenu,
+  });
 
   if (!props.libraryMode || props.viewMode === 'files') {
     return (
@@ -154,6 +182,14 @@ export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterPro
     return (
       <LibraryPageEnter routeKey={routeKey}>
         <WatchlistPage onNavigateLibrary={navigateLibraryHome} />
+      </LibraryPageEnter>
+    );
+  }
+
+  if (route.page === 'downloads') {
+    return (
+      <LibraryPageEnter routeKey={routeKey}>
+        <DownloadsPage />
       </LibraryPageEnter>
     );
   }
@@ -274,14 +310,17 @@ export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterPro
   return (
     <LibraryPageEnter routeKey={routeKey}>
     <>
-      <LibraryFranchisesRow
-        libraryTitles={props.libraryTitles}
-        onOpenFranchise={(franchiseId) => {
-          playUiSound('open');
-          navigateToFranchise(franchiseId);
-        }}
-      />
-      {recentlyAdded.length > 0 && (
+      {contextMenu}
+      {props.contentMode !== 'music' && (
+        <LibraryFranchisesRow
+          libraryTitles={props.libraryTitles}
+          onOpenFranchise={(franchiseId) => {
+            playUiSound('open');
+            navigateToFranchise(franchiseId);
+          }}
+        />
+      )}
+      {props.contentMode !== 'music' && recentlyAdded.length > 0 && (
         <section className="library-home-section">
           <h2 className="library-home-section__heading">{t('library.section.recentlyAdded')}</h2>
           <div className="discover-row">
@@ -309,6 +348,7 @@ export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterPro
                     navigateToLocalTitle(title.id);
                   }}
                   onPrimaryAction={() => props.playTitle(title)}
+                  onContextMenu={(event) => openTitleContextMenu(event, title)}
                 />
               );
             })}
@@ -318,6 +358,7 @@ export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterPro
       <section className="library-home-section">
         <TitleMediaGrid
           titles={props.libraryTitles}
+          contentMode={props.contentMode}
           excludeTitleIds={excludeTitleIds}
           selectedTitleId={undefined}
           playingId={props.playingId}
@@ -334,6 +375,7 @@ export const LibraryRouter = memo(function LibraryRouter(props: LibraryRouterPro
             if (focus) props.onFocusRow(focus.id);
           }}
           onContinueTitle={(title) => props.playTitle(title)}
+          onTitleContextMenu={openTitleContextMenu}
         />
       </section>
     </>
