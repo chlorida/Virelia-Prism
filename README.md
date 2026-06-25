@@ -5,7 +5,12 @@
 Virelia Prism targets large personal libraries—anime, series, and music—with rich title pages, queue workflows, local playback, optional online metadata, and an on-device subtitle pipeline. The UI is a custom cinematic shell (library, watch mode, and mini player) backed by a Rust core and a React renderer.
 
 <p align="center">
+  <img src="docs/screenshots/hero.png" alt="Virelia Prism — library with title grid, franchises, and queue panel" width="920" />
+</p>
+
+<p align="center">
   <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#tech-stack">Stack</a> ·
   <a href="#getting-started">Getting started</a> ·
@@ -64,6 +69,52 @@ Virelia Prism targets large personal libraries—anime, series, and music—with
 - UI sounds, toast notifications, context menus, first-run onboarding wizard
 - English and Russian UI (`auto` detects ru / uk / be)
 - Focus-visible accessibility and `prefers-reduced-motion` support
+
+---
+
+## Screenshots
+
+### Library & discovery
+
+<p align="center">
+  <img src="docs/screenshots/discover.png" alt="Discover page with curated anime and series rails" width="920" />
+  <br />
+  <sub>Discover — metadata rails and catalog recommendations</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/title-detail.png" alt="Title detail page with episodes and metadata" width="920" />
+  <br />
+  <sub>Title detail — episodes, progress, synopsis, and artwork</sub>
+</p>
+
+### Playback
+
+<p align="center">
+  <img src="docs/screenshots/watch-mode.png" alt="Watch mode with cinema player and episode shelf" width="920" />
+  <br />
+  <sub>Watch mode — cinema layout, subtitles, technical tags, up next</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mini-player.png" alt="Compact mini player window" width="480" />
+  <br />
+  <sub>Mini player — compact window with playback controls</sub>
+</p>
+
+### Subtitles & settings
+
+<p align="center">
+  <img src="docs/screenshots/subtitles.png" alt="Subtitle track selection and generation" width="920" />
+  <br />
+  <sub>Subtitles — track picker, Whisper generation, translation</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/settings.png" alt="Settings modal with playback and subtitle options" width="920" />
+  <br />
+  <sub>Settings — playback, subtitles, discovery, and advanced options</sub>
+</p>
 
 ---
 
@@ -169,6 +220,7 @@ virelia-prism/
 ├── src/main/              # Electron main process (dev shell)
 ├── src/shared/            # Shared types, i18n, defaults
 ├── src-tauri/             # Rust backend, commands, services, resources
+├── docs/screenshots/      # README screenshots
 ├── public/sounds/         # UI sound assets
 └── scripts/               # Whisper and translation setup helpers
 ```
