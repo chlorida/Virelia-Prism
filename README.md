@@ -235,7 +235,11 @@ Network behavior, local data storage, and offline mode are documented in [`PRIVA
 
 ## License
 
-All rights reserved. Source is provided for review and portfolio purposes unless a separate license is published.
+**UNLICENSED — proprietary.**
+
+Copyright © 2026 Virelia. All rights reserved.
+
+This repository is not currently distributed under an open-source license. Contact Virelia for commercial or redistribution terms.
 
 ---
 
